@@ -409,22 +409,22 @@ def _decode_record(record, name_to_features):
 
 
 def main(_):
-    tf.logging.set_verbosity(tf.logging.INFO)
+    tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.INFO)
 
     if not FLAGS.do_train and not FLAGS.do_eval:  # 必须是训练或验证的类型
         raise ValueError("At least one of `do_train` or `do_eval` must be True.")
 
     bert_config = modeling.BertConfig.from_json_file(FLAGS.bert_config_file)  # 从json文件中获得配置信息
 
-    tf.gfile.MakeDirs(FLAGS.output_dir)
+    tf.io.gfile.makedirs(FLAGS.output_dir)
 
     input_files = []  # 输入可以是多个文件，以“逗号隔开”；可以是一个匹配形式的，如“input_x*”
     for input_pattern in FLAGS.input_file.split(","):
-        input_files.extend(tf.gfile.Glob(input_pattern))
+        input_files.extend(tf.io.gfile.glob(input_pattern))
 
-    tf.logging.info("*** Input Files ***")
+    tf.compat.v1.logging.info("*** Input Files ***")
     for input_file in input_files:
-        tf.logging.info("  %s" % input_file)
+        tf.compat.v1.logging.info("  %s" % input_file)
 
     tpu_cluster_resolver = None
     if FLAGS.use_tpu and FLAGS.tpu_name:
@@ -436,6 +436,7 @@ def main(_):
     # ###tpu_cluster_resolver: <tensorflow.python.distribute.cluster_resolver.tpu_cluster_resolver.TPUClusterResolver object at 0x7f4b387b06a0> ;FLAGS.use_tpu: True ;FLAGS.tpu_name: grpc://10.240.1.83:8470
 
     is_per_host = tf.contrib.tpu.InputPipelineConfig.PER_HOST_V2
+
     run_config = tf.contrib.tpu.RunConfig(
         keep_checkpoint_max=20,  # 10
         cluster=tpu_cluster_resolver,
@@ -466,8 +467,8 @@ def main(_):
         eval_batch_size=FLAGS.eval_batch_size)
 
     if FLAGS.do_train:
-        tf.logging.info("***** Running training *****")
-        tf.logging.info("  Batch size = %d", FLAGS.train_batch_size)
+        tf.compat.v1.logging.info("***** Running training *****")
+        tf.compat.v1.logging.info("  Batch size = %d", FLAGS.train_batch_size)
         train_input_fn = input_fn_builder(
             input_files=input_files,
             max_seq_length=FLAGS.max_seq_length,
@@ -476,8 +477,8 @@ def main(_):
         estimator.train(input_fn=train_input_fn, max_steps=FLAGS.num_train_steps)
 
     if FLAGS.do_eval:
-        tf.logging.info("***** Running evaluation *****")
-        tf.logging.info("  Batch size = %d", FLAGS.eval_batch_size)
+        tf.compat.v1.logging.info("***** Running evaluation *****")
+        tf.compat.v1.logging.info("  Batch size = %d", FLAGS.eval_batch_size)
 
         eval_input_fn = input_fn_builder(
             input_files=input_files,
@@ -488,10 +489,10 @@ def main(_):
         result = estimator.evaluate(input_fn=eval_input_fn, steps=FLAGS.max_eval_steps)
 
         output_eval_file = os.path.join(FLAGS.output_dir, "eval_results.txt")
-        with tf.gfile.GFile(output_eval_file, "w") as writer:
-            tf.logging.info("***** Eval results *****")
+        with tf.io.gfile.GFile(output_eval_file, "w") as writer:
+            tf.compat.v1.logging.info("***** Eval results *****")
             for key in sorted(result.keys()):
-                tf.logging.info("  %s = %s", key, str(result[key]))
+                tf.compat.v1.logging.info("  %s = %s", key, str(result[key]))
                 writer.write("%s = %s\n" % (key, str(result[key])))
 
 
@@ -499,4 +500,4 @@ if __name__ == "__main__":
     flags.mark_flag_as_required("input_file")
     flags.mark_flag_as_required("bert_config_file")
     flags.mark_flag_as_required("output_dir")
-    tf.app.run()
+    tf.compat.v1.app.run()
